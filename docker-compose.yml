@@ -1,0 +1,66 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: SALESNAV360
+      POSTGRES_USER: salesnav
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD before starting Compose}
+    volumes:
+      - salesnav360_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U salesnav -d SALESNAV360"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - salesnav360
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      SERVER_PORT: 8082
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-localhost}
+      DB_URL: jdbc:postgresql://db:5432/SALESNAV360
+      DB_USER: salesnav
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD before starting Compose}
+      SALESNAV_JWT_SECRET: ${SALESNAV_JWT_SECRET:?Set SALESNAV_JWT_SECRET before starting Compose}
+      SALESNAV_JWT_COOKIE_NAME: salesnav360
+      SALESNAV_COOKIE_SECURE: ${SALESNAV_COOKIE_SECURE:-false}
+      SALESNAV_BOOTSTRAP_ADMIN_USERNAME: ${SALESNAV_BOOTSTRAP_ADMIN_USERNAME:?Set SALESNAV_BOOTSTRAP_ADMIN_USERNAME before starting Compose}
+      SALESNAV_BOOTSTRAP_ADMIN_EMAIL: ${SALESNAV_BOOTSTRAP_ADMIN_EMAIL:?Set SALESNAV_BOOTSTRAP_ADMIN_EMAIL before starting Compose}
+      SALESNAV_BOOTSTRAP_ADMIN_PASSWORD: ${SALESNAV_BOOTSTRAP_ADMIN_PASSWORD:?Set SALESNAV_BOOTSTRAP_ADMIN_PASSWORD before starting Compose}
+      SALESNAV_CORS_ALLOWED_ORIGINS: http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8082/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    networks:
+      - salesnav360
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: /api/v1/salesnav
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - salesnav360
+    restart: unless-stopped
+
+networks:
+  salesnav360:
+
+volumes:
+  salesnav360_db_data:

@@ -1,0 +1,269 @@
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import App from './App';
+
+jest.mock('./services/api', () => ({
+  authAPI: {
+    currentUser: jest.fn(),
+    login: jest.fn(),
+    logout: jest.fn(),
+  },
+  crmAPI: {
+    dashboard: jest.fn(),
+    clients: jest.fn(),
+    client: jest.fn(),
+    createClient: jest.fn(),
+    updateClient: jest.fn(),
+    archiveClient: jest.fn(),
+    clientDuplicates: jest.fn(),
+    leads: jest.fn(),
+    createLead: jest.fn(),
+    updateLead: jest.fn(),
+    moveLead: jest.fn(),
+    convertLead: jest.fn(),
+    tasks: jest.fn(),
+    task: jest.fn(),
+    createTask: jest.fn(),
+    updateTask: jest.fn(),
+    changeTaskStatus: jest.fn(),
+    policies: jest.fn(),
+    policy: jest.fn(),
+    createPolicy: jest.fn(),
+    updatePolicy: jest.fn(),
+    quotations: jest.fn(),
+    quotation: jest.fn(),
+    createQuotation: jest.fn(),
+    updateQuotation: jest.fn(),
+    changeQuotationStatus: jest.fn(),
+  },
+  adminAPI: {
+    users: jest.fn(),
+    createUser: jest.fn(),
+    updateUser: jest.fn(),
+    roles: jest.fn(),
+    createRole: jest.fn(),
+    auditEvents: jest.fn(),
+  },
+}));
+
+const clientRecord = {
+  id: 7,
+  fullName: 'Apex Finance',
+  email: 'contact@apex.example',
+  phone: '+91 55500 1100',
+  companyName: 'Apex Financial Services',
+  type: 'CLIENT',
+  status: 'ACTIVE',
+  leadSource: 'Referral',
+  assignedTo: 'crm-admin',
+  notes: '',
+  createdAt: '2026-10-20T10:00:00Z',
+  updatedAt: '2026-10-22T10:00:00Z',
+};
+
+function renderApp(path = '/') {
+  return render(
+    <MemoryRouter
+      initialEntries={[path]}
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </MemoryRouter>
+  );
+}
+
+test('shows the login page when there is no active SalesNav360 session', async () => {
+  const { authAPI } = require('./services/api');
+  authAPI.currentUser.mockRejectedValue(new Error('No active session'));
+
+  renderApp();
+
+  expect(await screen.findByRole('heading', { name: 'SalesNav360' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+});
+
+test('renders the dashboard using metrics returned by the CRM API', async () => {
+  const { authAPI, crmAPI } = require('./services/api');
+  authAPI.currentUser.mockResolvedValue({ data: { username: 'crm-admin', email: 'admin@example.test', roles: ['ADMIN'] } });
+  crmAPI.dashboard.mockResolvedValue({
+    data: {
+      totalClients: 2,
+      totalInvestors: 1,
+      totalLeads: 4,
+      openLeads: 3,
+      wonDeals: 1,
+      followUpsDueToday: 2,
+      conversionRate: 25,
+      closedWonRevenue: 12000,
+      averageDealSize: 12000,
+      activePipelineValue: 34000,
+      activeTasks: 2,
+      completedTasks: 1,
+      overdueTasks: 0,
+      upcomingTasks: [],
+      leadStages: { NEW: 1, CONTACTED: 1, QUALIFIED: 1, PROPOSAL: 0, NEGOTIATION: 0, WON: 1, LOST: 0 },
+      recentActivity: [],
+    },
+  });
+
+  renderApp();
+
+  expect(await screen.findByRole('heading', { name: 'Welcome, crm-admin' })).toBeInTheDocument();
+  expect(screen.getByText('Clients & investors')).toBeInTheDocument();
+  expect(screen.getByText(/34,000/)).toBeInTheDocument();
+  expect(crmAPI.dashboard).toHaveBeenCalledTimes(1);
+});
+
+test('creates a client from the clients page and refreshes the list', async () => {
+  const { authAPI, crmAPI } = require('./services/api');
+  authAPI.currentUser.mockResolvedValue({ data: { username: 'crm-admin', email: 'admin@example.test', roles: ['ADMIN'] } });
+  crmAPI.clients.mockResolvedValue({
+    data: { content: [clientRecord], totalElements: 1, totalPages: 1, number: 0 },
+  });
+  crmAPI.createClient.mockResolvedValue({ data: { ...clientRecord, id: 8 } });
+
+  renderApp('/clients');
+  expect(await screen.findByText('Apex Finance')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Add client' }));
+  fireEvent.change(screen.getByLabelText('Full name *'), { target: { value: 'Northstar Investor' } });
+  fireEvent.change(screen.getByLabelText('Record type *'), { target: { value: 'INVESTOR' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Create record' }));
+
+  await waitFor(() => expect(crmAPI.createClient).toHaveBeenCalledTimes(1));
+  expect(crmAPI.createClient).toHaveBeenCalledWith(expect.objectContaining({
+    fullName: 'Northstar Investor',
+    type: 'INVESTOR',
+  }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(crmAPI.clients).toHaveBeenCalledTimes(2);
+});
+
+test('shows administration data only on the admin route for an admin user', async () => {
+  const { authAPI, adminAPI } = require('./services/api');
+  authAPI.currentUser.mockResolvedValue({
+    data: { username: 'crm-admin', email: 'admin@example.test', roles: ['ADMIN'] },
+  });
+  adminAPI.users.mockResolvedValue({
+    data: {
+      content: [{
+        id: 1,
+        username: 'crm-admin',
+        email: 'admin@example.test',
+        roles: ['ADMIN'],
+        enabled: true,
+        createdAt: '2026-10-20T10:00:00Z',
+      }, {
+        id: 2,
+        username: 'sales-rep',
+        email: 'rep@example.test',
+        roles: ['READ_ONLY'],
+        enabled: true,
+        createdAt: '2026-10-21T10:00:00Z',
+      }],
+      totalElements: 2,
+    },
+  });
+  adminAPI.roles.mockResolvedValue({ data: ['ADMIN', 'READ_ONLY', 'SALES_REPRESENTATIVE'] });
+  adminAPI.auditEvents.mockResolvedValue({ data: { content: [] } });
+
+  renderApp('/admin/users');
+
+  expect(await screen.findByRole('heading', { name: 'User management' })).toBeInTheDocument();
+  expect((await screen.findAllByText('crm-admin')).length).toBeGreaterThan(0);
+  expect(adminAPI.users).toHaveBeenCalledTimes(1);
+
+  fireEvent.click(screen.getAllByRole('button', { name: 'Roles' })[1]);
+  const roleDialog = await screen.findByRole('dialog', { name: 'Manage roles' });
+  fireEvent.click(within(roleDialog).getByLabelText('SALES_REPRESENTATIVE'));
+  fireEvent.click(within(roleDialog).getByRole('button', { name: 'Save roles' }));
+
+  await waitFor(() => expect(adminAPI.updateUser).toHaveBeenCalledWith(2, {
+    enabled: true,
+    roles: ['READ_ONLY', 'SALES_REPRESENTATIVE'],
+  }));
+});
+
+test('creates a task using the task API', async () => {
+  const { authAPI, crmAPI } = require('./services/api');
+  authAPI.currentUser.mockResolvedValue({
+    data: { username: 'crm-admin', email: 'admin@example.test', roles: ['ADMIN'] },
+  });
+  crmAPI.tasks.mockResolvedValue({ data: { content: [], totalElements: 0, totalPages: 0 } });
+  crmAPI.createTask.mockResolvedValue({ data: { id: 21, status: 'OPEN' } });
+
+  renderApp('/tasks');
+  expect(await screen.findByRole('heading', { name: 'Tasks & follow-ups' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Add task' }));
+  fireEvent.change(screen.getByLabelText('Title *'), { target: { value: 'Review policy renewal' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Create task' }));
+
+  await waitFor(() => expect(crmAPI.createTask).toHaveBeenCalledWith(expect.objectContaining({
+    title: 'Review policy renewal',
+    priority: 'MEDIUM',
+    relatedEntityType: null,
+    relatedEntityId: null,
+  })));
+});
+
+test('creates a policy linked to an existing client', async () => {
+  const { authAPI, crmAPI } = require('./services/api');
+  authAPI.currentUser.mockResolvedValue({
+    data: { username: 'crm-admin', email: 'admin@example.test', roles: ['ADMIN'] },
+  });
+  crmAPI.policies.mockResolvedValue({ data: { content: [], totalElements: 0, totalPages: 0 } });
+  crmAPI.clients.mockResolvedValue({
+    data: { content: [clientRecord], totalElements: 1, totalPages: 1 },
+  });
+  crmAPI.createPolicy.mockResolvedValue({ data: { id: 31 } });
+
+  renderApp('/policies');
+  expect(await screen.findByRole('heading', { name: 'Policies & portfolios' })).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole('button', { name: 'Add policy' })[0]);
+  fireEvent.change(screen.getByLabelText('Policy number *'), { target: { value: 'POL-TEST-1' } });
+  fireEvent.change(screen.getByLabelText('Policy type *'), { target: { value: 'Life' } });
+  fireEvent.change(screen.getByLabelText('Client *'), { target: { value: '7' } });
+  fireEvent.change(screen.getByLabelText('Provider / insurer *'), { target: { value: 'Example Insurer' } });
+  fireEvent.change(screen.getByLabelText('Premium amount *'), { target: { value: '100.25' } });
+  fireEvent.change(screen.getByLabelText('Coverage amount *'), { target: { value: '10000' } });
+  fireEvent.change(screen.getByLabelText('Start date *'), { target: { value: '2030-01-01' } });
+  fireEvent.change(screen.getByLabelText('Expiry date *'), { target: { value: '2031-01-01' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Create policy' }));
+
+  await waitFor(() => expect(crmAPI.createPolicy).toHaveBeenCalledWith(expect.objectContaining({
+    policyNumber: 'POL-TEST-1',
+    clientId: 7,
+    premiumAmount: '100.25',
+    coverageAmount: '10000',
+  })));
+});
+
+test('creates a quotation draft with line items and decimal inputs', async () => {
+  const { authAPI, crmAPI } = require('./services/api');
+  authAPI.currentUser.mockResolvedValue({
+    data: { username: 'crm-admin', email: 'admin@example.test', roles: ['ADMIN'] },
+  });
+  crmAPI.quotations.mockResolvedValue({ data: { content: [], totalElements: 0, totalPages: 0 } });
+  crmAPI.clients.mockResolvedValue({ data: { content: [clientRecord], totalElements: 1 } });
+  crmAPI.leads.mockResolvedValue({ data: { content: [], totalElements: 0 } });
+  crmAPI.createQuotation.mockResolvedValue({ data: { id: 41, status: 'DRAFT' } });
+
+  renderApp('/quotations');
+  expect(await screen.findByRole('heading', { name: 'Quotations' })).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole('button', { name: 'New quotation' })[0]);
+  fireEvent.change(screen.getByLabelText('Client *'), { target: { value: '7' } });
+  fireEvent.change(screen.getByLabelText('Tax (%)'), { target: { value: '18' } });
+  fireEvent.change(screen.getByLabelText('Description *'), { target: { value: 'Annual service' } });
+  fireEvent.change(screen.getByLabelText('Unit price *'), { target: { value: '10.10' } });
+  fireEvent.change(screen.getByLabelText('Quantity *'), { target: { value: '2' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+  await waitFor(() => expect(crmAPI.createQuotation).toHaveBeenCalledWith(expect.objectContaining({
+    clientId: 7,
+    discountPercent: '0',
+    taxPercent: '18',
+    lineItems: [{ description: 'Annual service', quantity: '2', unitPrice: '10.10' }],
+  })));
+});
