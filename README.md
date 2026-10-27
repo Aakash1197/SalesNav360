@@ -35,10 +35,9 @@ Do not point SalesNav360 at another application's database. The backend creates/
 
 ## Configure and run the backend
 
-In a PowerShell terminal, set a private JWT secret of at least 64 UTF-8 bytes, the database password, and first-admin credentials. Do not commit these values:
+In a PowerShell terminal, set the PostgreSQL password and, only when starting with an empty user table, the first-admin credentials. Do not commit these values:
 
 ```powershell
-$env:SALESNAV_JWT_SECRET = Read-Host "Enter a random secret of at least 64 characters"
 $env:DB_PASSWORD = Read-Host "Enter the SALESNAV360 PostgreSQL password"
 $env:SALESNAV_BOOTSTRAP_ADMIN_USERNAME = Read-Host "Choose the first admin username"
 $env:SALESNAV_BOOTSTRAP_ADMIN_EMAIL = Read-Host "Choose the first admin email"
@@ -54,7 +53,7 @@ mvn spring-boot:run
 
 The API listens at `http://localhost:8082`. The health endpoint is `http://localhost:8082/actuator/health`. The first admin is inserted only if the SalesNav360 user table is empty. `application.properties` maps the `SALESNAV_BOOTSTRAP_ADMIN_*` environment variables to the bootstrap settings used by the application; provide them on the first start only. If the table is empty and bootstrap variables are missing or invalid, startup fails with an explanatory error. Once an account exists, changing bootstrap variables does not change that account.
 
-The default `localhost` profile uses the local PostgreSQL URL and `DDL_AUTO=update`. Profile configuration stays in `src/main/resources/application.properties` and `application-{profile}.properties`; secrets are supplied through environment-variable placeholders and must not be committed in those files. Select `dev` or `prod` by setting `$env:SPRING_PROFILES_ACTIVE = "dev"` or `"prod"` before launching. Development requires explicit database credentials. Production defaults to `DDL_AUTO=validate` and Secure cookies; provide an exact `SALESNAV_CORS_ALLOWED_ORIGINS` value and provision the schema before startup. A database migration framework is not configured yet, so production deployments must provision and manage schema changes outside this application.
+The default `localhost` profile uses the local PostgreSQL URL and `DDL_AUTO=update`. On first localhost startup, if `SALESNAV_JWT_SECRET` is not set, the backend automatically creates a random signing key in `%USERPROFILE%\.salesnav360\jwt-secret` and reuses it on later starts. Keep that file; deleting it invalidates existing login tokens. This local key is outside the repository. Development and production require an explicit strong `SALESNAV_JWT_SECRET` through the deployment environment or secret manager. Profile configuration stays in `src/main/resources/application.properties` and `application-{profile}.properties`; do not commit secrets in those files. Select `dev` or `prod` by setting `$env:SPRING_PROFILES_ACTIVE = "dev"` or `"prod"` before launching. Development requires explicit database credentials. Production defaults to `DDL_AUTO=validate` and Secure cookies; provide an exact `SALESNAV_CORS_ALLOWED_ORIGINS` value and provision the schema before startup. A database migration framework is not configured yet, so production deployments must provision and manage schema changes outside this application.
 
 Important backend environment variables:
 
@@ -63,7 +62,7 @@ Important backend environment variables:
 | `DB_URL` | JDBC URL for the independent SalesNav360 database | `jdbc:postgresql://localhost:5432/SALESNAV360` |
 | `DB_USER` | PostgreSQL user | `postgres` |
 | `DB_PASSWORD` | PostgreSQL password | Required by your local PostgreSQL setup |
-| `SALESNAV_JWT_SECRET` | Private JWT signing key, at least 64 UTF-8 bytes | Required |
+| `SALESNAV_JWT_SECRET` | Private JWT signing key, at least 32 bytes | Auto-generated and persisted for `localhost`; required for `dev`/`prod` |
 | `SALESNAV_JWT_COOKIE_NAME` | JWT cookie name | `salesnav360` |
 | `SALESNAV_COOKIE_SECURE` | Mark JWT cookie Secure; set true behind HTTPS | `false` |
 | `SALESNAV_JWT_EXPIRATION_SECONDS` | JWT lifetime | `3600` |
