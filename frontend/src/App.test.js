@@ -97,6 +97,7 @@ test('shows the login page when there is no active SalesNav360 session', async (
   expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
 });
 
+<<<<<<< Updated upstream
 test('keeps the selected tab when an API request returns unauthorized but the session is valid', async () => {
   const { authAPI, crmAPI } = require('./services/api');
   authAPI.currentUser.mockResolvedValue({
@@ -128,6 +129,22 @@ test('redirects to login when an unauthorized API request confirms the session e
   fireEvent(window, new Event('salesnav360:unauthorized'));
 
   expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+=======
+test('shows a clear message when the login credentials are rejected', async () => {
+  const { authAPI } = require('./services/api');
+  authAPI.currentUser.mockRejectedValueOnce(new Error('No active session'));
+  authAPI.login.mockRejectedValue({ response: { status: 401 } });
+
+  renderApp('/login');
+
+  fireEvent.change(await screen.findByLabelText('Username'), { target: { value: 'admin' } });
+  fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'incorrect-password' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Username or password is incorrect, or this account is disabled.'
+  );
+>>>>>>> Stashed changes
 });
 
 test('renders the dashboard using metrics returned by the CRM API', async () => {

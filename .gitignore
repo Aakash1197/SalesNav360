@@ -3,6 +3,9 @@
 **/target/
 **/.env
 !.env.example
+**/.env.local
+**/.env.dev
+**/.env.prod
 *.log
 logs/
 .DS_Store

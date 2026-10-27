@@ -15,9 +15,13 @@
     "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "npm run start:local",
+    "start:local": "react-scripts start",
+    "start:dev": "env-cmd -f .env.dev react-scripts start",
+    "start:prod": "env-cmd -f .env.prod react-scripts start",
     "test": "react-scripts test",
-    "build": "react-scripts build"
+    "build": "react-scripts build",
+    "build:prod": "env-cmd -f .env.prod react-scripts build"
   },
   "eslintConfig": {
     "extends": [
@@ -36,5 +40,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "env-cmd": "^11.0.0"
   }
 }

@@ -2,6 +2,20 @@ import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
+function getLoginErrorMessage(error) {
+  const status = error.response?.status;
+  if (status === 401) {
+    return 'Username or password is incorrect, or this account is disabled.';
+  }
+  if (status === 403) {
+    return 'The security token was rejected. Refresh the page and try again.';
+  }
+  if (!error.response) {
+    return 'Cannot reach the SalesNav360 API. Check that the backend is running and the API URL is correct.';
+  }
+  return error.response.data?.message || `Login failed (HTTP ${status}).`;
+}
+
 export default function LoginPage() {
   const { user, loading, login } = useAuth();
   const navigate = useNavigate();
@@ -21,7 +35,7 @@ export default function LoginPage() {
       await login(credentials);
       navigate(location.state?.from?.pathname || '/', { replace: true });
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'Login failed. Check the SalesNav360 API and your credentials.');
+      setError(getLoginErrorMessage(requestError));
     } finally {
       setSubmitting(false);
     }

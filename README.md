@@ -52,9 +52,9 @@ Then run from `backend`:
 mvn spring-boot:run
 ```
 
-The API listens at `http://localhost:8082`. The health endpoint is `http://localhost:8082/actuator/health`. The first admin is inserted only if the SalesNav360 user table is empty. If the table is empty and bootstrap variables are missing or invalid, startup fails with an explanatory error. Once an account exists, changing bootstrap variables does not change that account.
+The API listens at `http://localhost:8082`. The health endpoint is `http://localhost:8082/actuator/health`. The first admin is inserted only if the SalesNav360 user table is empty. `application.properties` maps the `SALESNAV_BOOTSTRAP_ADMIN_*` environment variables to the bootstrap settings used by the application; provide them on the first start only. If the table is empty and bootstrap variables are missing or invalid, startup fails with an explanatory error. Once an account exists, changing bootstrap variables does not change that account.
 
-The default `localhost` profile uses the local PostgreSQL URL and `DDL_AUTO=update`. Set `$env:SPRING_PROFILES_ACTIVE = "dev"` or `"prod"` before launching to select those profiles. Development requires explicit database credentials. Production defaults to `DDL_AUTO=validate` and Secure cookies; provide an exact `SALESNAV_CORS_ALLOWED_ORIGINS` value and provision the schema before startup. A database migration framework is not configured yet, so production deployments must provision and manage schema changes outside this application.
+The default `localhost` profile uses the local PostgreSQL URL and `DDL_AUTO=update`. Profile configuration stays in `src/main/resources/application.properties` and `application-{profile}.properties`; secrets are supplied through environment-variable placeholders and must not be committed in those files. Select `dev` or `prod` by setting `$env:SPRING_PROFILES_ACTIVE = "dev"` or `"prod"` before launching. Development requires explicit database credentials. Production defaults to `DDL_AUTO=validate` and Secure cookies; provide an exact `SALESNAV_CORS_ALLOWED_ORIGINS` value and provision the schema before startup. A database migration framework is not configured yet, so production deployments must provision and manage schema changes outside this application.
 
 Important backend environment variables:
 
@@ -83,10 +83,12 @@ In another terminal, from `frontend`:
 
 ```powershell
 npm install
-npm start
+npm run start:local
 ```
 
-Open `http://localhost:3000`. The frontend sends authentication and CRM API requests directly to `http://localhost:8082/api/v1/salesnav`. To change this, set `REACT_APP_API_URL` before starting React; Create React App reads it at startup.
+`start:local` uses the local API default at `http://localhost:8082/api/v1/salesnav`; no env file is required. To override it, copy `.env.local.example` to `.env.local` and change `REACT_APP_API_URL`. For dev or production API targets, copy `.env.dev.example` to `.env.dev` or `.env.prod.example` to `.env.prod`, replace `REACT_APP_API_URL` with the corresponding backend URL, then run `npm run start:dev` or `npm run start:prod`. These local environment files are ignored by Git. `REACT_APP_*` values are included in the frontend bundle, so they must not contain secrets. `start:prod` runs the CRA development server against the configured production API; use `npm run build:prod` to create the production bundle.
+
+Open `http://localhost:3000` when using a start command.
 
 Login (the frontend handles CSRF-token retrieval and sends the required header automatically):
 
