@@ -220,6 +220,7 @@ a { color: inherit; text-decoration: none; }
 .focus-note { display: flex; align-items: flex-start; gap: 7px; margin-top: 9px; padding: 10px; border-radius: 8px; color: var(--text-soft); background: var(--surface-soft); font-size: 9px; line-height: 1.45; }
 
 .client-summary-grid, .lead-summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.portfolio-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
 .task-summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
 .summary-card { display: flex; align-items: center; gap: 12px; min-height: 76px; padding: 14px 16px; }
 .summary-card > div { display: grid; gap: 5px; }
@@ -240,6 +241,54 @@ a { color: inherit; text-decoration: none; }
 .role-choice { display: inline-flex; align-items: center; gap: 7px; margin: 4px 12px 4px 0; color: var(--text); font-size: 10px; }
 .role-choice input { width: auto; height: auto; margin: 0; }
 .role-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; }
+.analytics-metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
+.analytics-metric { min-height: 112px; display: grid; align-content: start; gap: 8px; padding: 17px; }
+.analytics-metric small, .report-card small { color: var(--text-faint); font-size: 9px; font-weight: 800; letter-spacing: .45px; }
+.analytics-metric strong { font-family: Manrope, sans-serif; font-size: 21px; overflow-wrap: anywhere; }
+.analytics-metric span, .report-card p { color: var(--text-soft); font-size: 10px; line-height: 1.45; }
+.analytics-chart-card { padding: 19px 21px; }
+.analytics-stage-list { display: grid; gap: 13px; margin-top: 18px; }
+.analytics-stage-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 32px; align-items: center; gap: 12px; color: var(--text-soft); font-size: 11px; text-transform: capitalize; }
+.analytics-stage-row strong { color: var(--text); text-align: right; }
+.analytics-stage-track { height: 9px; overflow: hidden; border-radius: 999px; background: var(--surface-soft); }
+.analytics-stage-track span { height: 100%; display: block; border-radius: inherit; background: linear-gradient(90deg, #536deb, #42b9a2); }
+.calendar-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 12px; padding: 15px 19px; }
+.calendar-toolbar .field { width: min(250px, 100%); margin: 0; }
+.calendar-toolbar .field input { height: 38px; }
+.calendar-events { padding: 20px; }
+.calendar-event-list { display: grid; }
+.calendar-event-row { display: grid; grid-template-columns: 48px minmax(150px, 1fr) minmax(120px, auto) auto; align-items: center; gap: 13px; padding: 13px 3px; border-top: 1px solid var(--border); }
+.calendar-date-block { width: 43px; height: 47px; display: grid; place-content: center; border: 1px solid var(--border); border-radius: 9px; color: var(--brand); background: var(--brand-soft); text-align: center; }
+.calendar-date-block strong { font-size: 16px; line-height: 1.1; }
+.calendar-date-block small { font-size: 9px; text-transform: uppercase; }
+.calendar-event-copy { display: grid; justify-items: start; gap: 4px; min-width: 0; }
+.calendar-event-copy strong { color: var(--text); font-size: 12px; }
+.calendar-event-copy p { margin: 0; overflow: hidden; color: var(--text-soft); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.calendar-event-time { display: flex; align-items: center; gap: 5px; color: var(--text-soft); font-size: 10px; white-space: nowrap; }
+.email-provider-notice { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border: 1px solid #f1dfb6; border-radius: 10px; color: #825a12; background: #fff9e9; font-size: 11px; line-height: 1.5; }
+.email-provider-notice svg { flex: 0 0 auto; }
+.email-workspace { overflow: hidden; }
+.email-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.email-tab { display: flex; align-items: center; gap: 7px; padding: 9px 12px; border: 0; border-radius: 8px; color: var(--text-soft); background: transparent; font-size: 11px; font-weight: 700; }
+.email-tab.active { color: white; background: var(--text); }
+.email-content { padding: 18px 20px 20px; }
+.template-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.email-template-card { display: grid; gap: 9px; padding: 15px; }
+.email-template-card > div { display: flex; align-items: center; justify-content: space-between; }
+.email-template-card h3 { margin: 0; font-size: 13px; }
+.email-template-card > strong { color: var(--text-soft); font-size: 10px; }
+.email-template-card p { max-height: 70px; overflow: hidden; margin: 0; color: var(--text-soft); font-size: 10px; line-height: 1.5; white-space: pre-wrap; }
+.email-template-card > small { color: var(--text-faint); font-size: 9px; }
+.reports-summary { display: flex; align-items: center; gap: 13px; padding: 18px 20px; }
+.reports-summary h2 { margin: 0 0 4px; font-family: Manrope, sans-serif; font-size: 15px; }
+.reports-summary p, .report-note p { margin: 0; color: var(--text-soft); font-size: 10px; line-height: 1.5; }
+.reports-summary .updated-pill { margin-left: auto; }
+.report-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+.report-card { min-height: 132px; display: grid; align-content: start; gap: 9px; padding: 17px; }
+.report-card strong { font-family: Manrope, sans-serif; font-size: 19px; }
+.report-card p { margin: 0; }
+.report-note { padding: 16px 18px; }
+.report-note strong { display: block; margin-bottom: 5px; font-size: 11px; }
 .quotation-lines { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
 .quotation-line { display: grid; grid-template-columns: minmax(160px, 1fr) 100px 140px 34px; align-items: end; gap: 10px; }
 .field input:focus, .field select:focus, .field textarea:focus, .search-field:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px rgb(47 99 233 / 9%); }
@@ -355,6 +404,9 @@ a { color: inherit; text-decoration: none; }
   .sidebar { width: 205px; flex-basis: 205px; }
   .main-content { width: calc(100% - 205px); padding-right: 22px; padding-left: 22px; }
   .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portfolio-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .analytics-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 760px) {
@@ -387,6 +439,10 @@ a { color: inherit; text-decoration: none; }
   .pipeline-toolbar .search-field, .pipeline-toolbar .select-field, .pipeline-toolbar .view-switch { grid-column: 1; }
   .pipeline-toolbar .view-switch { justify-self: start; }
   .filters-row { grid-template-columns: 1fr; }
+  .calendar-event-row { grid-template-columns: 48px minmax(0, 1fr) auto; }
+  .calendar-event-time { grid-column: 2; }
+  .calendar-event-row .row-actions { grid-column: 3; grid-row: 1 / span 2; }
+  .email-content { padding: 14px; }
   .table-card, .pipeline-card { padding-right: 13px; padding-left: 13px; }
   .kanban-scroll { margin-right: -13px; margin-left: -13px; padding-right: 13px; padding-left: 13px; }
   .kanban-board { min-width: 900px; }
@@ -412,6 +468,20 @@ a { color: inherit; text-decoration: none; }
   .stage-bar-row { grid-template-columns: 82px 1fr 20px; }
   .client-summary-grid { grid-template-columns: 1fr 1fr; }
   .lead-summary-grid { grid-template-columns: 1fr; gap: 8px; }
+  .portfolio-summary-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .analytics-metric-grid, .report-grid, .template-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .analytics-metric, .report-card { min-height: 100px; padding: 12px; }
+  .analytics-metric strong, .report-card strong { font-size: 15px; }
+  .calendar-toolbar { align-items: stretch; flex-direction: column; padding: 13px; }
+  .calendar-toolbar .field { width: 100%; }
+  .calendar-events { padding: 14px; }
+  .calendar-event-row { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 8px; }
+  .calendar-date-block { width: 38px; height: 42px; }
+  .calendar-event-copy p { max-width: 160px; }
+  .email-tabs { padding: 10px; }
+  .email-tab { padding: 8px; font-size: 9px; }
+  .reports-summary { align-items: flex-start; }
+  .reports-summary .updated-pill { display: none; }
   .table-toolbar { align-items: flex-start; flex-direction: column; }
   .table-toolbar .button { align-self: flex-end; }
   .form-grid, .detail-grid { grid-template-columns: 1fr; }

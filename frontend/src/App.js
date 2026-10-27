@@ -9,6 +9,10 @@ import AdminUsersPage from './components/AdminUsersPage';
 import TasksPage from './components/TasksPage';
 import PoliciesPage from './components/PoliciesPage';
 import QuotationsPage from './components/QuotationsPage';
+import AnalyticsPage from './components/AnalyticsPage';
+import CalendarPage from './components/CalendarPage';
+import EmailPage from './components/EmailPage';
+import ReportsPage from './components/ReportsPage';
 
 export default function App() {
   return (
@@ -20,6 +24,10 @@ export default function App() {
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/leads" element={<LeadsPage />} />
           <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/email" element={<EmailPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
           <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'SALES_REPRESENTATIVE', 'SALES_MANAGER', 'OPERATIONS']} />}>
             <Route path="/policies" element={<PoliciesPage />} />
             <Route path="/quotations" element={<QuotationsPage />} />

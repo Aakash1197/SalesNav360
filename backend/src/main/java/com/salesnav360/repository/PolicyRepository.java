@@ -2,6 +2,8 @@ package com.salesnav360.repository;
 
 import com.salesnav360.entity.PolicyRecord;
 import com.salesnav360.enums.PolicyStatus;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,5 +30,18 @@ public interface PolicyRepository extends JpaRepository<PolicyRecord, Long> {
             Pageable pageable);
 
     Optional<PolicyRecord> findByPolicyNumberIgnoreCase(String policyNumber);
-}
 
+    long countByStatus(PolicyStatus status);
+
+    @Query("select coalesce(sum(p.premiumAmount), 0) from PolicyRecord p where p.status = :status")
+    BigDecimal sumPremiumByStatus(@Param("status") PolicyStatus status);
+
+    @Query("""
+            select count(p) from PolicyRecord p
+            where p.status = :status and p.renewalDate between :from and :to
+            """)
+    long countRenewingBetween(
+            @Param("status") PolicyStatus status,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
+}

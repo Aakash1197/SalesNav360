@@ -15,7 +15,23 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let active = true;
-    const handleUnauthorized = () => setUser(null);
+    let checkingSession = false;
+    const handleUnauthorized = async () => {
+      if (checkingSession) return;
+      checkingSession = true;
+      try {
+        const response = await authAPI.currentUser();
+        if (active) setUser(response.data);
+      } catch (error) {
+        if (active && error.response?.status === 401) {
+          setUser(null);
+        } else if (active) {
+          console.error('SalesNav360 session validation failed', error);
+        }
+      } finally {
+        checkingSession = false;
+      }
+    };
     window.addEventListener('salesnav360:unauthorized', handleUnauthorized);
     authAPI.currentUser()
       .then((response) => {

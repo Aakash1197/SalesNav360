@@ -27,6 +27,7 @@ function currency(value) {
 
 export default function PoliciesPage() {
   const [pageData, setPageData] = useState(null);
+  const [portfolio, setPortfolio] = useState(null);
   const [clients, setClients] = useState([]);
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
@@ -43,7 +44,7 @@ export default function PoliciesPage() {
     setLoading(true);
     setError('');
     try {
-      const [policyResponse, clientResponse] = await Promise.all([
+      const [policyResponse, clientResponse, portfolioResponse] = await Promise.all([
         crmAPI.policies({
           query: query.trim() || undefined,
           status: status || undefined,
@@ -53,8 +54,10 @@ export default function PoliciesPage() {
           direction: 'ASC',
         }),
         crmAPI.clients({ page: 0, size: 100, sort: 'fullName', direction: 'ASC' }),
+        crmAPI.portfolioSummary(),
       ]);
       setPageData(policyResponse.data);
+      setPortfolio(portfolioResponse.data);
       setClients(clientResponse.data.content.filter((client) => client.status !== 'ARCHIVED'));
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Policies could not be loaded. Check access and API connectivity.');
@@ -126,10 +129,11 @@ export default function PoliciesPage() {
         <button className="button primary" type="button" onClick={openCreate}><Plus size={16} /> Add policy</button>
       </section>
 
-      <section className="lead-summary-grid">
-        <article className="card lead-summary"><small>POLICIES IN VIEW</small><strong>{pageData?.totalElements ?? '—'}</strong></article>
-        <article className="card lead-summary"><small>ACTIVE IN VIEW</small><strong>{policies.filter((policy) => policy.status === 'ACTIVE').length}</strong></article>
-        <article className="card lead-summary"><small>UPCOMING RENEWALS IN VIEW</small><strong>{policies.filter((policy) => policy.renewalDate && policy.renewalDate >= new Date().toISOString().slice(0, 10)).length}</strong></article>
+      <section className="portfolio-summary-grid">
+        <article className="card lead-summary"><small>TOTAL POLICIES</small><strong>{portfolio?.totalPolicies ?? '—'}</strong></article>
+        <article className="card lead-summary"><small>ACTIVE POLICIES</small><strong>{portfolio?.activePolicies ?? '—'}</strong></article>
+        <article className="card lead-summary"><small>RENEWALS NEXT 30 DAYS</small><strong>{portfolio?.renewalsNext30Days ?? '—'}</strong></article>
+        <article className="card lead-summary"><small>ACTIVE PREMIUM VALUE</small><strong>{portfolio ? currency(portfolio.activePremiumValue) : '—'}</strong></article>
       </section>
 
       <section className="table-card">

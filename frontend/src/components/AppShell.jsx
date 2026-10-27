@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowUpRight,
   Bell,
   ChevronDown,
   CircleHelp,
@@ -17,6 +16,11 @@ import {
   Shield,
   FileText,
   X,
+  ChartNoAxesCombined,
+  CalendarDays,
+  Mail,
+  ChartColumnIncreasing,
+  Layers3,
 } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -37,20 +41,17 @@ export default function AppShell() {
   const searchInputRef = useRef(null);
 
   useEffect(() => {
-    const onUnauthorized = () => navigate('/login', { replace: true });
     const onShortcut = (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         searchInputRef.current?.focus();
       }
     };
-    window.addEventListener('salesnav360:unauthorized', onUnauthorized);
     window.addEventListener('keydown', onShortcut);
     return () => {
-      window.removeEventListener('salesnav360:unauthorized', onUnauthorized);
       window.removeEventListener('keydown', onShortcut);
     };
-  }, [navigate]);
+  }, []);
 
   const toggleTheme = () => {
     const nextTheme = dark ? 'light' : 'dark';
@@ -154,11 +155,15 @@ export default function AppShell() {
           <nav aria-label="Main navigation">
             <p className="nav-caption">WORKSPACE</p>
             <NavLink to="/" end onClick={() => setMobileNavOpen(false)}><LayoutDashboard size={17} /> Dashboard</NavLink>
+            <NavLink to="/analytics" onClick={() => setMobileNavOpen(false)}><ChartNoAxesCombined size={17} /> Analytics</NavLink>
             <NavLink to="/clients" onClick={() => setMobileNavOpen(false)}><UsersRound size={17} /> Clients &amp; Investors</NavLink>
-            <NavLink to="/leads" onClick={() => setMobileNavOpen(false)}><ArrowUpRight size={17} /> Leads &amp; Pipeline</NavLink>
+            <NavLink to="/leads" onClick={() => setMobileNavOpen(false)}><Layers3 size={17} /> Workspace</NavLink>
             <NavLink to="/tasks" onClick={() => setMobileNavOpen(false)}><CheckSquare size={17} /> Tasks &amp; follow-ups</NavLink>
             {user?.roles?.some((roleName) => ['ADMIN', 'SALES_REPRESENTATIVE', 'SALES_MANAGER', 'OPERATIONS'].includes(roleName)) && <NavLink to="/policies" onClick={() => setMobileNavOpen(false)}><Shield size={17} /> Policies &amp; portfolios</NavLink>}
             {user?.roles?.some((roleName) => ['ADMIN', 'SALES_REPRESENTATIVE', 'SALES_MANAGER', 'OPERATIONS'].includes(roleName)) && <NavLink to="/quotations" onClick={() => setMobileNavOpen(false)}><FileText size={17} /> Quotations</NavLink>}
+            <NavLink to="/calendar" onClick={() => setMobileNavOpen(false)}><CalendarDays size={17} /> Calendar</NavLink>
+            <NavLink to="/email" onClick={() => setMobileNavOpen(false)}><Mail size={17} /> Email</NavLink>
+            <NavLink to="/reports" onClick={() => setMobileNavOpen(false)}><ChartColumnIncreasing size={17} /> Reports</NavLink>
             {user?.roles?.includes('ADMIN') && <NavLink to="/admin/users" onClick={() => setMobileNavOpen(false)}><UserCog size={17} /> Administration</NavLink>}
           </nav>
           <div className="sidebar-bottom">

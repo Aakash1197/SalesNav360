@@ -2,6 +2,7 @@ package com.salesnav360.service.impl;
 
 import com.salesnav360.dto.PolicyRequest;
 import com.salesnav360.dto.PolicyResponse;
+import com.salesnav360.dto.PortfolioSummaryResponse;
 import com.salesnav360.entity.ClientRecord;
 import com.salesnav360.entity.PolicyRecord;
 import com.salesnav360.enums.ClientStatus;
@@ -11,6 +12,7 @@ import com.salesnav360.repository.PolicyRepository;
 import com.salesnav360.repository.UserAccountRepository;
 import com.salesnav360.service.AuditEventService;
 import com.salesnav360.service.PolicyService;
+import java.time.LocalDate;
 import java.util.Objects;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -72,6 +74,19 @@ public class PolicyServiceImpl implements PolicyService {
         return PolicyResponse.from(policy);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PortfolioSummaryResponse portfolioSummary() {
+        LocalDate today = LocalDate.now();
+        return new PortfolioSummaryResponse(
+                policyRepository.count(),
+                policyRepository.countByStatus(PolicyStatus.ACTIVE),
+                policyRepository.countByStatus(PolicyStatus.PENDING),
+                policyRepository.countByStatus(PolicyStatus.EXPIRED),
+                policyRepository.countRenewingBetween(PolicyStatus.ACTIVE, today, today.plusDays(30)),
+                policyRepository.sumPremiumByStatus(PolicyStatus.ACTIVE));
+    }
+
     private void validate(PolicyRequest request, Long existingId) {
         if (request.startDate().isAfter(request.expiryDate())
                 || (request.renewalDate() != null
@@ -107,4 +122,3 @@ public class PolicyServiceImpl implements PolicyService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 }
-

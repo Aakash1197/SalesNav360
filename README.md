@@ -2,7 +2,7 @@
 
 SalesNav360 is an independently deployable CRM frontend and backend. It owns its authentication, authorization, JWT signing key, users, roles, and PostgreSQL database. It has no runtime dependency on another project's frontend, backend, authentication, or database.
 
-Phase 3 is underway. Implemented functionality includes a database-backed dashboard, client/investor CRUD and archive, lead pipeline with server-validated stage transitions and duplicate-safe lead conversion, task management and follow-ups, policies, decimal-safe quotations with downloadable PDFs, responsive light/dark frontend views, role-protected user and role administration, paginated audit history, and login/CRM audit events.
+Core Phase 3 workflows are implemented, and Phase 4 API development is underway. Implemented functionality includes a database-backed dashboard, client/investor CRUD and archive, lead pipeline with server-validated stage transitions and duplicate-safe lead conversion, task management and follow-ups, policies and portfolio metrics, decimal-safe quotations with downloadable PDFs, calendar events, email templates and communication history, analytics/report summaries, responsive light/dark frontend views, role-protected user and role administration, paginated audit history, and login/CRM audit events.
 
 ## Architecture
 
@@ -142,12 +142,21 @@ Use browser credentials (`withCredentials`) so the HttpOnly session cookie is se
 - `GET /api/v1/salesnav/policies/{id}` — policy details with linked client.
 - `POST /api/v1/salesnav/policies` — create a policy linked to an active client, with decimal premium/coverage and date validation.
 - `PUT /api/v1/salesnav/policies/{id}` — update policy information and status.
+- `GET /api/v1/salesnav/policies/portfolio` — portfolio totals, active premium value, and active renewals due within 30 days.
 - `GET /api/v1/salesnav/quotations?query=...&status=...&page=0&size=20` — searchable quotation page with status filter.
 - `GET /api/v1/salesnav/quotations/{id}` — quotation and line item details.
 - `POST /api/v1/salesnav/quotations` — create a server-numbered draft with line items; subtotal, discount, tax and total are calculated with `BigDecimal`.
 - `PUT /api/v1/salesnav/quotations/{id}` — update a draft quotation only.
 - `PATCH /api/v1/salesnav/quotations/{id}/status` — transition draft/sent/accepted/rejected/expired status; acceptance does not mark a lead as won.
 - `GET /api/v1/salesnav/quotations/{id}/pdf` — download an authenticated PDF quotation.
+- `GET /api/v1/salesnav/calendar/events?fromDate=YYYY-MM-DD&toDate=YYYY-MM-DD&page=0&size=50` — date-filtered, searchable calendar events.
+- `POST /api/v1/salesnav/calendar/events` and `PUT /api/v1/salesnav/calendar/events/{id}` — create or update an event, optionally linked to an active client/investor.
+- `DELETE /api/v1/salesnav/calendar/events/{id}` — delete a calendar event.
+- `GET /api/v1/salesnav/communications/templates?page=0&size=50` — search and page through email templates.
+- `POST /api/v1/salesnav/communications/templates` and `PUT /api/v1/salesnav/communications/templates/{id}` — create or update a reusable email template.
+- `GET /api/v1/salesnav/communications/history?page=0&size=50` — paginated client/lead communication history.
+- `POST /api/v1/salesnav/communications/history` — record an unsent communication draft against a client or lead.
+- `GET /api/v1/salesnav/analytics/summary` and `GET /api/v1/salesnav/reports/summary` — aggregate lead, task, policy, and accepted-quotation metrics.
 
 There is no public signup endpoint. User and role changes are enforced by Spring Security and service-level validation; client-side visibility is not the authorization boundary.
 
@@ -167,7 +176,10 @@ There is no public signup endpoint. User and role changes are enforced by Spring
 - Policy CRUD currently covers client/provider/type, premium, coverage, dates, status, and assignee; renewal reminders are displayed as dates only and are not sent as notifications.
 - Quotation drafts, line items, decimal-safe totals, status history, and PDF downloads are implemented. Sending a quotation through an external email provider is not implemented.
 - Updating a quotation to `SENT` changes its CRM status only; it does not send an email.
-- Still not implemented: calendar/events, client interaction history, email provider/templates, import and all-record export, custom fields/layouts, configurable quotas, and full analytics/reporting. Do not treat these as available CRM workflows.
+- Calendar events support date filtering, event details, and optional active-client association; automatic reminders and recurring events are not implemented.
+- Email templates and communication history are persisted, but there is no SMTP or email API integration. Recording a communication does not send it; the UI and API mark records as not sent.
+- Analytics and reports currently expose aggregate lifetime metrics and a CSV summary. Date-ranged/monthly/quarterly reports, scheduled reports, and sales-representative breakdowns are not implemented.
+- Still not implemented: client interaction history beyond recorded email communications, import and all-record export, custom fields/layouts, and configurable quotas. Do not treat these as available CRM workflows.
 - No migration framework or production migration scripts are configured; production schema migrations must be designed, applied, and tested before deployment.
 
 ## Docker Compose

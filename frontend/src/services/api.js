@@ -22,7 +22,11 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && !error.config?.url?.endsWith('/auth/login')) {
+    if (
+      error.response?.status === 401
+      && !error.config?.url?.endsWith('/auth/login')
+      && !error.config?.url?.endsWith('/auth/me')
+    ) {
       window.dispatchEvent(new Event('salesnav360:unauthorized'));
     }
     return Promise.reject(error);
@@ -57,6 +61,18 @@ export const crmAPI = {
   policy: (id) => api.get(`/policies/${id}`),
   createPolicy: (policy) => api.post('/policies', policy),
   updatePolicy: (id, policy) => api.put(`/policies/${id}`, policy),
+  portfolioSummary: () => api.get('/policies/portfolio'),
+  calendarEvents: (params) => api.get('/calendar/events', { params }),
+  createCalendarEvent: (event) => api.post('/calendar/events', event),
+  updateCalendarEvent: (id, event) => api.put(`/calendar/events/${id}`, event),
+  deleteCalendarEvent: (id) => api.delete(`/calendar/events/${id}`),
+  emailTemplates: (params) => api.get('/communications/templates', { params }),
+  createEmailTemplate: (template) => api.post('/communications/templates', template),
+  updateEmailTemplate: (id, template) => api.put(`/communications/templates/${id}`, template),
+  communications: (params) => api.get('/communications/history', { params }),
+  logCommunication: (communication) => api.post('/communications/history', communication),
+  analyticsSummary: () => api.get('/analytics/summary'),
+  reportSummary: () => api.get('/reports/summary'),
   quotations: (params) => api.get('/quotations', { params }),
   quotation: (id) => api.get(`/quotations/${id}`),
   quotationPdf: (id) => api.get(`/quotations/${id}/pdf`, { responseType: 'blob' }),

@@ -34,4 +34,3 @@ public interface TaskRepository extends JpaRepository<TaskRecord, Long> {
 
     List<TaskRecord> findTop5ByStatusInAndDueDateGreaterThanEqualOrderByDueDateAsc(Set<TaskStatus> statuses, LocalDate date);
 }
-

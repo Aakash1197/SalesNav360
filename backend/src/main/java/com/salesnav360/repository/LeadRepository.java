@@ -46,4 +46,3 @@ public interface LeadRepository extends JpaRepository<LeadRecord, Long> {
     BigDecimal sumExpectedValueByStage(@Param("stage") LeadStage stage);
 
 }
-

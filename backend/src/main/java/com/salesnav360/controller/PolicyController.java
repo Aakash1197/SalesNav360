@@ -3,6 +3,7 @@ package com.salesnav360.controller;
 import com.salesnav360.dto.PageResponse;
 import com.salesnav360.dto.PolicyRequest;
 import com.salesnav360.dto.PolicyResponse;
+import com.salesnav360.dto.PortfolioSummaryResponse;
 import com.salesnav360.enums.PolicyStatus;
 import com.salesnav360.security.SalesNavUserDetails;
 import com.salesnav360.service.PolicyService;
@@ -62,6 +63,12 @@ public class PolicyController {
         return policyService.get(id);
     }
 
+    @GetMapping("/portfolio")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES_REPRESENTATIVE', 'SALES_MANAGER', 'OPERATIONS')")
+    public PortfolioSummaryResponse portfolioSummary() {
+        return policyService.portfolioSummary();
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'SALES_REPRESENTATIVE', 'SALES_MANAGER', 'OPERATIONS')")
     @ResponseStatus(HttpStatus.CREATED)
@@ -80,4 +87,3 @@ public class PolicyController {
         return policyService.update(id, request, user.getUsername());
     }
 }
-

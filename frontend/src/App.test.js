@@ -31,6 +31,18 @@ jest.mock('./services/api', () => ({
     policy: jest.fn(),
     createPolicy: jest.fn(),
     updatePolicy: jest.fn(),
+    portfolioSummary: jest.fn(),
+    calendarEvents: jest.fn(),
+    createCalendarEvent: jest.fn(),
+    updateCalendarEvent: jest.fn(),
+    deleteCalendarEvent: jest.fn(),
+    emailTemplates: jest.fn(),
+    createEmailTemplate: jest.fn(),
+    updateEmailTemplate: jest.fn(),
+    communications: jest.fn(),
+    logCommunication: jest.fn(),
+    analyticsSummary: jest.fn(),
+    reportSummary: jest.fn(),
     quotations: jest.fn(),
     quotation: jest.fn(),
     createQuotation: jest.fn(),
@@ -85,6 +97,39 @@ test('shows the login page when there is no active SalesNav360 session', async (
   expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
 });
 
+test('keeps the selected tab when an API request returns unauthorized but the session is valid', async () => {
+  const { authAPI, crmAPI } = require('./services/api');
+  authAPI.currentUser.mockResolvedValue({
+    data: { username: 'crm-admin', email: 'admin@example.test', roles: ['ADMIN'] },
+  });
+  crmAPI.clients.mockResolvedValue({ data: { content: [], totalElements: 0, totalPages: 0 } });
+
+  renderApp('/clients');
+  expect(await screen.findByRole('heading', { name: 'Clients & Investors' })).toBeInTheDocument();
+
+  fireEvent(window, new Event('salesnav360:unauthorized'));
+
+  await waitFor(() => expect(authAPI.currentUser).toHaveBeenCalledTimes(2));
+  expect(screen.getByRole('heading', { name: 'Clients & Investors' })).toBeInTheDocument();
+});
+
+test('redirects to login when an unauthorized API request confirms the session expired', async () => {
+  const { authAPI, crmAPI } = require('./services/api');
+  authAPI.currentUser
+    .mockResolvedValueOnce({
+      data: { username: 'crm-admin', email: 'admin@example.test', roles: ['ADMIN'] },
+    })
+    .mockRejectedValueOnce({ response: { status: 401 } });
+  crmAPI.clients.mockResolvedValue({ data: { content: [], totalElements: 0, totalPages: 0 } });
+
+  renderApp('/clients');
+  expect(await screen.findByRole('heading', { name: 'Clients & Investors' })).toBeInTheDocument();
+
+  fireEvent(window, new Event('salesnav360:unauthorized'));
+
+  expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+});
+
 test('renders the dashboard using metrics returned by the CRM API', async () => {
   const { authAPI, crmAPI } = require('./services/api');
   authAPI.currentUser.mockResolvedValue({ data: { username: 'crm-admin', email: 'admin@example.test', roles: ['ADMIN'] } });
@@ -115,6 +160,81 @@ test('renders the dashboard using metrics returned by the CRM API', async () => 
   expect(screen.getByText('Clients & investors')).toBeInTheDocument();
   expect(screen.getByText(/34,000/)).toBeInTheDocument();
   expect(crmAPI.dashboard).toHaveBeenCalledTimes(1);
+});
+
+test('renders analytics from the analytics API', async () => {
+  const { authAPI, crmAPI } = require('./services/api');
+  authAPI.currentUser.mockResolvedValue({ data: { username: 'crm-admin', roles: ['ADMIN'] } });
+  crmAPI.analyticsSummary.mockResolvedValue({ data: {
+    totalClients: 3,
+    totalLeads: 5,
+    openLeads: 2,
+    wonDeals: 1,
+    leadConversionRate: 20,
+    activePipelineValue: 15000,
+    closedWonRevenue: 5000,
+    activeTasks: 2,
+    completedTasks: 3,
+    taskCompletionRate: 60,
+    activePolicies: 2,
+    renewalsNext30Days: 1,
+    acceptedQuotations: 1,
+    totalQuotations: 2,
+    quotationConversionRate: 50,
+    acceptedQuotationValue: 2500,
+    leadStages: { NEW: 2, QUALIFIED: 2, WON: 1 },
+  } });
+
+  renderApp('/analytics');
+
+  expect(await screen.findByRole('heading', { name: 'Analytics' })).toBeInTheDocument();
+  expect(await screen.findByText('LEAD CONVERSION')).toBeInTheDocument();
+  expect(await screen.findByText('new')).toBeInTheDocument();
+});
+
+test('renders the calendar screen and loads the selected month events', async () => {
+  const { authAPI, crmAPI } = require('./services/api');
+  authAPI.currentUser.mockResolvedValue({ data: { username: 'crm-admin', roles: ['ADMIN'] } });
+  crmAPI.calendarEvents.mockResolvedValue({ data: { content: [] } });
+  crmAPI.clients.mockResolvedValue({ data: { content: [] } });
+
+  renderApp('/calendar');
+
+  expect(await screen.findByRole('heading', { name: 'Calendar' })).toBeInTheDocument();
+  expect(await screen.findByText('No events this month')).toBeInTheDocument();
+  expect(crmAPI.calendarEvents).toHaveBeenCalledTimes(1);
+});
+
+test('shows email templates and history without implying email delivery', async () => {
+  const { authAPI, crmAPI } = require('./services/api');
+  authAPI.currentUser.mockResolvedValue({ data: { username: 'crm-admin', roles: ['ADMIN'] } });
+  crmAPI.emailTemplates.mockResolvedValue({ data: { content: [] } });
+  crmAPI.communications.mockResolvedValue({ data: { content: [] } });
+  crmAPI.clients.mockResolvedValue({ data: { content: [] } });
+  crmAPI.leads.mockResolvedValue({ data: { content: [] } });
+
+  renderApp('/email');
+
+  expect(await screen.findByRole('heading', { name: 'Email' })).toBeInTheDocument();
+  expect(screen.getByText(/Email delivery is not configured/)).toBeInTheDocument();
+  expect(screen.getByRole('tab', { name: 'Email templates' })).toBeInTheDocument();
+});
+
+test('renders reports from the report API', async () => {
+  const { authAPI, crmAPI } = require('./services/api');
+  authAPI.currentUser.mockResolvedValue({ data: { username: 'crm-admin', roles: ['ADMIN'] } });
+  crmAPI.reportSummary.mockResolvedValue({ data: {
+    totalClients: 1, totalLeads: 0, openLeads: 0, wonDeals: 0, leadConversionRate: 0,
+    activePipelineValue: 0, closedWonRevenue: 0, activeTasks: 0, completedTasks: 0,
+    taskCompletionRate: 0, activePolicies: 0, renewalsNext30Days: 0,
+    acceptedQuotations: 0, totalQuotations: 0, quotationConversionRate: 0,
+    acceptedQuotationValue: 0, leadStages: {},
+  } });
+
+  renderApp('/reports');
+
+  expect(await screen.findByRole('heading', { name: 'Reports' })).toBeInTheDocument();
+  expect(await screen.findByText('Lead conversion')).toBeInTheDocument();
 });
 
 test('creates a client from the clients page and refreshes the list', async () => {
@@ -217,6 +337,10 @@ test('creates a policy linked to an existing client', async () => {
   crmAPI.clients.mockResolvedValue({
     data: { content: [clientRecord], totalElements: 1, totalPages: 1 },
   });
+  crmAPI.portfolioSummary.mockResolvedValue({ data: {
+    totalPolicies: 0, activePolicies: 0, pendingPolicies: 0, expiredPolicies: 0,
+    renewalsNext30Days: 0, activePremiumValue: 0,
+  } });
   crmAPI.createPolicy.mockResolvedValue({ data: { id: 31 } });
 
   renderApp('/policies');

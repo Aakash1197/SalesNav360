@@ -455,6 +455,119 @@ class CrmIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void calendarEmailAndPortfolioEndpointsPersistDataAndReportUnsentCommunications() throws Exception {
+        String suffix = Long.toUnsignedString(System.nanoTime());
+        Csrf clientCsrf = csrf();
+        MvcResult client = mockMvc.perform(post("/api/v1/salesnav/clients")
+                        .cookie(authCookie, clientCsrf.cookie())
+                        .header("X-XSRF-TOKEN", clientCsrf.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "fullName":"Phase Four Client %s",
+                                  "email":"phase-four-%s@example.test",
+                                  "type":"CLIENT",
+                                  "status":"ACTIVE"
+                                }
+                                """.formatted(suffix, suffix)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        String clientId = jsonValue(client.getResponse().getContentAsString(), "id");
+        String title = "Phase Four Review " + suffix;
+        String eventDate = java.time.LocalDate.now().plusDays(5).toString();
+        String eventJson = """
+                {
+                  "title":"%s",
+                  "type":"MEETING",
+                  "eventDate":"%s",
+                  "startTime":"10:00:00",
+                  "endTime":"10:30:00",
+                  "description":"Review next steps.",
+                  "clientId":%s
+                }
+                """.formatted(title, eventDate, clientId);
+
+        Csrf eventCsrf = csrf();
+        MvcResult event = mockMvc.perform(post("/api/v1/salesnav/calendar/events")
+                        .cookie(authCookie, eventCsrf.cookie())
+                        .header("X-XSRF-TOKEN", eventCsrf.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(eventJson))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.clientName").value("Phase Four Client " + suffix))
+                .andReturn();
+        String eventId = jsonValue(event.getResponse().getContentAsString(), "id");
+
+        Csrf duplicateEventCsrf = csrf();
+        mockMvc.perform(post("/api/v1/salesnav/calendar/events")
+                        .cookie(authCookie, duplicateEventCsrf.cookie())
+                        .header("X-XSRF-TOKEN", duplicateEventCsrf.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(eventJson))
+                .andExpect(status().isConflict());
+        mockMvc.perform(get("/api/v1/salesnav/calendar/events")
+                        .cookie(authCookie)
+                        .param("fromDate", eventDate)
+                        .param("toDate", eventDate)
+                        .param("query", title))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1));
+
+        Csrf templateCsrf = csrf();
+        MvcResult template = mockMvc.perform(post("/api/v1/salesnav/communications/templates")
+                        .cookie(authCookie, templateCsrf.cookie())
+                        .header("X-XSRF-TOKEN", templateCsrf.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name":"Follow-up %s",
+                                  "subject":"A quick follow-up",
+                                  "body":"Thanks for your time."
+                                }
+                                """.formatted(suffix)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        String templateId = jsonValue(template.getResponse().getContentAsString(), "id");
+
+        Csrf historyCsrf = csrf();
+        mockMvc.perform(post("/api/v1/salesnav/communications/history")
+                        .cookie(authCookie, historyCsrf.cookie())
+                        .header("X-XSRF-TOKEN", historyCsrf.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "recipientEmail":"phase-four-%s@example.test",
+                                  "subject":"A quick follow-up",
+                                  "body":"Thanks for your time.",
+                                  "templateId":%s,
+                                  "clientId":%s
+                                }
+                                """.formatted(suffix, templateId, clientId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("NOT_SENT"));
+        mockMvc.perform(get("/api/v1/salesnav/communications/history").cookie(authCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].clientName").value("Phase Four Client " + suffix));
+        mockMvc.perform(get("/api/v1/salesnav/analytics/summary").cookie(authCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activePolicies").isNumber())
+                .andExpect(jsonPath("$.leadStages").exists());
+        mockMvc.perform(get("/api/v1/salesnav/reports/summary").cookie(authCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quotationConversionRate").isNumber());
+        mockMvc.perform(get("/api/v1/salesnav/policies/portfolio").cookie(authCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalPolicies").isNumber())
+                .andExpect(jsonPath("$.renewalsNext30Days").isNumber());
+
+        Csrf deleteCsrf = csrf();
+        mockMvc.perform(delete("/api/v1/salesnav/calendar/events/" + eventId)
+                        .cookie(authCookie, deleteCsrf.cookie())
+                        .header("X-XSRF-TOKEN", deleteCsrf.token()))
+                .andExpect(status().isNoContent());
+    }
+
     private Csrf csrf() throws Exception {
         MvcResult result = mockMvc.perform(get(AUTH_URL + "/csrf"))
                 .andExpect(status().isOk())

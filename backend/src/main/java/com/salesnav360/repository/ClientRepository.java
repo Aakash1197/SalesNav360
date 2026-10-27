@@ -43,5 +43,6 @@ public interface ClientRepository extends JpaRepository<ClientRecord, Long> {
             @Param("phone") String phone);
 
     Optional<ClientRecord> findByIdAndStatusNot(Long id, ClientStatus status);
-}
 
+    long countByStatusNot(ClientStatus status);
+}

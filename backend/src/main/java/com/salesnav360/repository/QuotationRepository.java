@@ -2,6 +2,7 @@ package com.salesnav360.repository;
 
 import com.salesnav360.entity.QuotationRecord;
 import com.salesnav360.enums.QuotationStatus;
+import java.math.BigDecimal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,5 +23,9 @@ public interface QuotationRepository extends JpaRepository<QuotationRecord, Long
             @Param("query") String query,
             @Param("status") QuotationStatus status,
             Pageable pageable);
-}
 
+    long countByStatus(QuotationStatus status);
+
+    @Query("select coalesce(sum(q.grandTotal), 0) from QuotationRecord q where q.status = :status")
+    BigDecimal sumGrandTotalByStatus(@Param("status") QuotationStatus status);
+}
