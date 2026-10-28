@@ -87,17 +87,49 @@ function renderApp(path = '/') {
   );
 }
 
-test('shows the login page when there is no active SalesNav360 session', async () => {
+test('shows the public landing page and login link when there is no active session', async () => {
   const { authAPI } = require('./services/api');
   authAPI.currentUser.mockRejectedValue(new Error('No active session'));
 
   renderApp();
 
-  expect(await screen.findByRole('heading', { name: 'SalesNav360' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: /loan rejected\? let's explore your options\./i })).toBeInTheDocument();
+  const header = screen.getByRole('banner');
+  expect(within(header).getByRole('link', { name: /login/i })).toHaveAttribute('href', '/login');
+  expect(within(header).getByRole('link', { name: 'Home' })).toHaveAttribute('href', '#home');
+  expect(within(header).getByRole('link', { name: 'About Us' })).toHaveAttribute('href', '#about');
+  expect(within(header).getByRole('link', { name: 'Services' })).toHaveAttribute('href', '#services');
+  expect(within(header).getByRole('link', { name: 'Contact Us' })).toHaveAttribute('href', '#contact');
+  const contact = document.getElementById('contact');
+  expect(screen.getByRole('heading', { name: /make the next move/i })).toBeInTheDocument();
+  expect(screen.getByText(/A rejected loan application doesn't mean your options end here/i)).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /explore services/i })).toHaveAttribute('href', '#services');
+  expect(screen.getByRole('heading', { name: 'Loan rejection assistance' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Credit profile guidance' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Loan eligibility assessment' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Alternative loan options' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Financial consultation' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Stay in control' })).toBeInTheDocument();
+  expect(document.querySelectorAll('.public-steps article')).toHaveLength(4);
+  expect(screen.getByRole('heading', { name: /questions after a loan decision/i })).toBeInTheDocument();
+  const firstFaq = screen.getByText('Why might a loan application be rejected?');
+  fireEvent.click(firstFaq);
+  expect(firstFaq.closest('details')).toHaveAttribute('open');
+  expect(screen.getByText(/Lenders may consider income/)).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute('href', '#privacy');
+  expect(screen.getByRole('link', { name: 'Terms of use' })).toHaveAttribute('href', '#terms');
+  expect(within(contact).getByRole('form')).toBeInTheDocument();
+  expect(within(contact).getByRole('link', { name: /jayinfotech20@gmail\.com/i })).toHaveAttribute('href', 'mailto:jayinfotech20@gmail.com');
+  expect(within(contact).getByRole('link', { name: /whatsapp/i })).toHaveAttribute('href', 'https://wa.me/918669178491');
+  expect(within(contact).getByRole('link', { name: /instagram/i })).toHaveAttribute('href', 'https://www.instagram.com/jit_computer_laptop/');
+  expect(within(contact).getByRole('link', { name: /\+91 8669178491/ })).toHaveAttribute('href', 'tel:+918669178491');
+  expect(within(contact).getByTitle('Jay Info Tech location in Solapur')).toHaveAttribute('src', expect.stringContaining('google.com/maps/embed'));
+  expect(within(contact).getByText(/Bhawani Path, Madal Wasti, Solapur - 413002/)).toBeInTheDocument();
+
+  fireEvent.click(within(header).getByRole('link', { name: /login/i }));
+  expect(await screen.findByRole('heading', { name: 'Sign in to continue' })).toBeInTheDocument();
 });
 
-<<<<<<< Updated upstream
 test('keeps the selected tab when an API request returns unauthorized but the session is valid', async () => {
   const { authAPI, crmAPI } = require('./services/api');
   authAPI.currentUser.mockResolvedValue({
@@ -129,7 +161,8 @@ test('redirects to login when an unauthorized API request confirms the session e
   fireEvent(window, new Event('salesnav360:unauthorized'));
 
   expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument();
-=======
+});
+
 test('shows a clear message when the login credentials are rejected', async () => {
   const { authAPI } = require('./services/api');
   authAPI.currentUser.mockRejectedValueOnce(new Error('No active session'));
@@ -137,6 +170,10 @@ test('shows a clear message when the login credentials are rejected', async () =
 
   renderApp('/login');
 
+  expect(await screen.findByRole('heading', { name: 'Sign in to continue' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /back to home/i })).toHaveAttribute('href', '/');
+  expect(screen.getByRole('link', { name: /return to homepage/i })).toHaveAttribute('href', '/');
+  expect(document.querySelector('.login-story-image')).toHaveAttribute('src', '/loan-advisor-background.png');
   fireEvent.change(await screen.findByLabelText('Username'), { target: { value: 'admin' } });
   fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'incorrect-password' } });
   fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
@@ -144,7 +181,6 @@ test('shows a clear message when the login credentials are rejected', async () =
   expect(await screen.findByRole('alert')).toHaveTextContent(
     'Username or password is incorrect, or this account is disabled.'
   );
->>>>>>> Stashed changes
 });
 
 test('renders the dashboard using metrics returned by the CRM API', async () => {
@@ -171,7 +207,7 @@ test('renders the dashboard using metrics returned by the CRM API', async () => 
     },
   });
 
-  renderApp();
+  renderApp('/dashboard');
 
   expect(await screen.findByRole('heading', { name: 'Welcome, crm-admin' })).toBeInTheDocument();
   expect(screen.getByText('Clients & investors')).toBeInTheDocument();

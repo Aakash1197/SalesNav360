@@ -3,7 +3,6 @@ import {
   Bell,
   ChevronDown,
   CircleHelp,
-  Command,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -85,7 +84,7 @@ export default function AppShell() {
       await logout();
       navigate('/login', { replace: true });
     } catch (error) {
-      console.error('SalesNav360 logout request failed', error);
+      console.error('Apex Finodeal LLP logout request failed', error);
       navigate('/login', { replace: true });
     }
   };
@@ -99,10 +98,10 @@ export default function AppShell() {
         <button className="icon-button mobile-menu" type="button" aria-label="Open navigation" onClick={() => setMobileNavOpen(!mobileNavOpen)}>
           {mobileNavOpen ? <X size={19} /> : <Menu size={19} />}
         </button>
-        <button className="brand-lockup" type="button" onClick={() => navigate('/')} aria-label="SalesNav360 dashboard">
-          <span className="brand-mark"><Command size={19} /></span>
-          <span className="brand-name">SalesNav<span>360</span></span>
-          <span className="brand-subtitle">Financial Services &amp; Insurance CRM</span>
+        <button className="brand-lockup" type="button" onClick={() => navigate('/dashboard')} aria-label="Apex Finodeal LLP dashboard">
+          <img className="brand-mark" src="/apex-finodeal-mark.svg" alt="" />
+          <span className="brand-name">Apex Finodeal LLP</span>
+          <span className="brand-subtitle">Financial Services</span>
         </button>
 
         <div className="topbar-right">
@@ -149,12 +148,12 @@ export default function AppShell() {
       <div className="app-body">
         <aside className={`sidebar ${mobileNavOpen ? 'sidebar-open' : ''}`}>
           <div className="sidebar-brand">
-            <span className="brand-mark small"><Command size={17} /></span>
-            <span><strong>SalesNav</strong><small>FINANCIAL SERVICES CRM</small></span>
+            <img className="brand-mark small" src="/apex-finodeal-mark.svg" alt="" />
+            <span><strong>Apex Finodeal LLP</strong><small>FINANCIAL SERVICES</small></span>
           </div>
           <nav aria-label="Main navigation">
             <p className="nav-caption">WORKSPACE</p>
-            <NavLink to="/" end onClick={() => setMobileNavOpen(false)}><LayoutDashboard size={17} /> Dashboard</NavLink>
+            <NavLink to="/dashboard" end onClick={() => setMobileNavOpen(false)}><LayoutDashboard size={17} /> Dashboard</NavLink>
             <NavLink to="/analytics" onClick={() => setMobileNavOpen(false)}><ChartNoAxesCombined size={17} /> Analytics</NavLink>
             <NavLink to="/clients" onClick={() => setMobileNavOpen(false)}><UsersRound size={17} /> Clients &amp; Investors</NavLink>
             <NavLink to="/leads" onClick={() => setMobileNavOpen(false)}><Layers3 size={17} /> Workspace</NavLink>

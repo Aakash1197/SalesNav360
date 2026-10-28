@@ -64,7 +64,7 @@ Important backend environment variables:
 | `DB_PASSWORD` | PostgreSQL password | Required by your local PostgreSQL setup |
 | `SALESNAV_JWT_SECRET` | Private JWT signing key, at least 32 bytes | Auto-generated and persisted for `localhost`; required for `dev`/`prod` |
 | `SALESNAV_JWT_COOKIE_NAME` | JWT cookie name | `salesnav360` |
-| `SALESNAV_COOKIE_SECURE` | Mark JWT cookie Secure; set true behind HTTPS | `false` |
+| `SALESNAV_COOKIE_SECURE` | Mark JWT cookie Secure; set true behind HTTPS. Secure cookies use `SameSite=None` for cross-site frontend/API requests; local non-Secure cookies use `SameSite=Lax`. | `false` for localhost/dev; `true` for prod |
 | `SALESNAV_JWT_EXPIRATION_SECONDS` | JWT lifetime | `3600` |
 | `SALESNAV_CORS_ALLOWED_ORIGINS` | Exact comma-separated frontend origins | `http://localhost:3000` |
 | `SALESNAV_BOOTSTRAP_ADMIN_USERNAME` | First admin username | Required only while there are no users |

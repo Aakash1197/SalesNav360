@@ -7,6 +7,7 @@ import com.salesnav360.repository.UserAccountRepository;
 import com.salesnav360.security.SalesNavJwtService;
 import com.salesnav360.security.SalesNavUserDetails;
 import jakarta.servlet.http.Cookie;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "salesnav.auth.jwt-secret=test-only-salesnav360-signing-secret-at-least-64-characters-long",
+        "salesnav.auth.cookie-secure=true",
         "salesnav.bootstrap.admin-username=bootstrap-admin",
         "salesnav.bootstrap.admin-email=bootstrap-admin@example.test",
         "salesnav.bootstrap.admin-password=TestAdministratorPassword123!"
@@ -106,6 +108,9 @@ class AuthIntegrationTest {
         Cookie sessionCookie = loginResult.getResponse().getCookie("salesnav360");
         assertNotNull(sessionCookie);
         assertTrue(sessionCookie.isHttpOnly());
+        assertTrue(loginResult.getResponse().getHeaders("Set-Cookie").stream()
+                .map(cookie -> cookie.toLowerCase(Locale.ROOT))
+                .anyMatch(cookie -> cookie.contains("secure") && cookie.contains("samesite=none")));
 
         mockMvc.perform(get(AUTH_URL + "/me").cookie(sessionCookie))
                 .andExpect(status().isOk())
@@ -113,6 +118,30 @@ class AuthIntegrationTest {
         mockMvc.perform(get("/api/v1/salesnav/admin/access").cookie(sessionCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.roles[0]").value("ADMIN"));
+
+        MvcResult logoutCsrfResult = mockMvc.perform(get(AUTH_URL + "/csrf"))
+                .andExpect(status().isOk())
+                .andReturn();
+        Matcher logoutTokenMatcher = Pattern.compile("\"token\":\"([^\"]+)\"")
+                .matcher(logoutCsrfResult.getResponse().getContentAsString());
+        assertTrue(logoutTokenMatcher.find());
+        Cookie logoutCsrfCookie = logoutCsrfResult.getResponse().getCookie("XSRF-TOKEN");
+        assertNotNull(logoutCsrfCookie);
+
+        MvcResult logoutResult = mockMvc.perform(post(AUTH_URL + "/logout")
+                        .cookie(sessionCookie, logoutCsrfCookie)
+                        .header("X-XSRF-TOKEN", logoutTokenMatcher.group(1)))
+                .andExpect(status().isNoContent())
+                .andReturn();
+        assertTrue(logoutResult.getResponse().getHeaders("Set-Cookie").stream()
+                .map(cookie -> cookie.toLowerCase(Locale.ROOT))
+                .anyMatch(cookie -> cookie.contains("salesnav360=")
+                        && cookie.contains("max-age=0")
+                        && cookie.contains("secure")
+                        && cookie.contains("samesite=none")));
+        assertTrue(logoutResult.getResponse().getHeaders("Set-Cookie").stream()
+                .map(cookie -> cookie.toLowerCase(Locale.ROOT))
+                .anyMatch(cookie -> cookie.contains("xsrf-token=") && cookie.contains("max-age=0")));
     }
 
     @Test
@@ -124,5 +153,25 @@ class AuthIntegrationTest {
                                 """))
                 .andExpect(status().isForbidden());
     }
-}
 
+    @Test
+    void clearsSessionCookieEvenWhenLogoutRequestHasNoValidSession() throws Exception {
+        MvcResult csrfResult = mockMvc.perform(get(AUTH_URL + "/csrf"))
+                .andExpect(status().isOk())
+                .andReturn();
+        Matcher tokenMatcher = Pattern.compile("\"token\":\"([^\"]+)\"")
+                .matcher(csrfResult.getResponse().getContentAsString());
+        assertTrue(tokenMatcher.find());
+        Cookie csrfCookie = csrfResult.getResponse().getCookie("XSRF-TOKEN");
+        assertNotNull(csrfCookie);
+
+        MvcResult logoutResult = mockMvc.perform(post(AUTH_URL + "/logout")
+                                .cookie(csrfCookie)
+                                .header("X-XSRF-TOKEN", tokenMatcher.group(1)))
+                .andExpect(status().isNoContent())
+                .andReturn();
+        assertTrue(logoutResult.getResponse().getHeaders("Set-Cookie").stream()
+                .map(cookie -> cookie.toLowerCase(Locale.ROOT))
+                .anyMatch(cookie -> cookie.contains("salesnav360=") && cookie.contains("max-age=0")));
+    }
+}

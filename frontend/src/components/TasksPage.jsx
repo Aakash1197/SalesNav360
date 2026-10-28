@@ -177,7 +177,7 @@ export default function TasksPage() {
 
       {dialogOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setDialogOpen(false); }}>
         <section className="modal-panel" role="dialog" aria-modal="true" aria-labelledby="task-dialog-title">
-          <header className="modal-header"><div><h2 id="task-dialog-title">{editing ? 'Update task' : 'Create a task'}</h2><p>Reminders are not sent; use the due date to track work in SalesNav360.</p></div><button className="icon-button" type="button" aria-label="Close task dialog" onClick={() => setDialogOpen(false)}><X size={18} /></button></header>
+          <header className="modal-header"><div><h2 id="task-dialog-title">{editing ? 'Update task' : 'Create a task'}</h2><p>Reminders are not sent; use the due date to track work in Apex Finodeal LLP.</p></div><button className="icon-button" type="button" aria-label="Close task dialog" onClick={() => setDialogOpen(false)}><X size={18} /></button></header>
           <form onSubmit={saveTask}>
             <div className="form-grid">
               <label className="field full-field"><span>Title *</span><input required maxLength="140" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>

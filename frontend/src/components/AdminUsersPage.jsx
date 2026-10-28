@@ -136,7 +136,7 @@ export default function AdminUsersPage() {
         <div>
           <span className="eyebrow">ADMINISTRATION</span>
           <h1>User management</h1>
-          <p>Manage SalesNav360 accounts, permitted roles, and administrative activity.</p>
+          <p>Manage Apex Finodeal LLP accounts, permitted roles, and administrative activity.</p>
         </div>
         <ShieldCheck size={23} />
       </section>
@@ -201,7 +201,7 @@ export default function AdminUsersPage() {
 
         <section className="table-card">
           <div className="table-toolbar"><div className="table-title"><ShieldCheck size={17} /><h2>Permitted roles</h2></div></div>
-          <p className="muted">The bootstrap ADMIN role is preserved. New role names are restricted to the supported SalesNav360 role catalog.</p>
+          <p className="muted">The bootstrap ADMIN role is preserved. New role names are restricted to the supported role catalog.</p>
           <form onSubmit={createRole}>
             <label className="field"><span>Role name</span>
               <select required value={newRole} onChange={(event) => setNewRole(event.target.value)}>

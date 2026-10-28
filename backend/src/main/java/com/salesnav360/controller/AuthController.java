@@ -88,7 +88,10 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
+    public ResponseEntity<Void> logout(
+            HttpServletRequest servletRequest,
+            HttpServletResponse servletResponse) {
+        csrfTokenRepository.saveToken(null, servletRequest, servletResponse);
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, jwtCookie("", 0).toString())
                 .build();
@@ -103,7 +106,7 @@ public class AuthController {
         return ResponseCookie.from(cookieName, value)
                 .httpOnly(true)
                 .secure(cookieSecure)
-                .sameSite("Lax")
+                .sameSite(cookieSecure ? "None" : "Lax")
                 .path("/")
                 .maxAge(maxAgeSeconds)
                 .build();
@@ -116,4 +119,3 @@ public class AuthController {
         return new AuthResponse(user.getId(), user.getUsername(), user.getEmail(), roles);
     }
 }
-

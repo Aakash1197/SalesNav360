@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
         if (active && error.response?.status === 401) {
           setUser(null);
         } else if (active) {
-          console.error('SalesNav360 session validation failed', error);
+          console.error('Apex Finodeal LLP session validation failed', error);
         }
       } finally {
         checkingSession = false;

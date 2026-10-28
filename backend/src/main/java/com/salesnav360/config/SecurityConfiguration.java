@@ -56,7 +56,10 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/api/v1/salesnav/auth/login", "/api/v1/salesnav/auth/csrf").permitAll()
+                        .requestMatchers(
+                                "/api/v1/salesnav/auth/login",
+                                "/api/v1/salesnav/auth/logout",
+                                "/api/v1/salesnav/auth/csrf").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
@@ -93,4 +96,3 @@ public class SecurityConfiguration {
         return source;
     }
 }
-

@@ -45,7 +45,7 @@ export default function ReportsPage() {
     const file = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(file);
-    link.download = 'salesnav360-report.csv';
+    link.download = 'apex-finodeal-report.csv';
     link.click();
     URL.revokeObjectURL(link.href);
   }

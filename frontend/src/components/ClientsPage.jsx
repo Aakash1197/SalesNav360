@@ -43,7 +43,7 @@ function downloadCsv(rows) {
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = 'salesnav360-clients.csv';
+  anchor.download = 'apex-finodeal-clients.csv';
   anchor.click();
   URL.revokeObjectURL(url);
 }
@@ -239,7 +239,7 @@ export default function ClientsPage() {
 
       {dialogOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setDialogOpen(false); }}>
         <section className="modal-panel" role="dialog" aria-modal="true" aria-labelledby="client-dialog-title">
-          <header className="modal-header"><div><h2 id="client-dialog-title">{editing ? 'Edit client record' : 'Add client or investor'}</h2><p>Contact information is stored securely in your SalesNav360 workspace.</p></div><button className="icon-button" type="button" aria-label="Close dialog" onClick={() => setDialogOpen(false)}><X size={18} /></button></header>
+          <header className="modal-header"><div><h2 id="client-dialog-title">{editing ? 'Edit client record' : 'Add client or investor'}</h2><p>Contact information is stored securely in your Apex Finodeal LLP workspace.</p></div><button className="icon-button" type="button" aria-label="Close dialog" onClick={() => setDialogOpen(false)}><X size={18} /></button></header>
           <form onSubmit={saveClient}>
             <div className="form-grid">
               <label className="field"><span>Full name *</span><input required maxLength="120" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} /></label>
